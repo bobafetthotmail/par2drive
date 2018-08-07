@@ -1,0 +1,137 @@
+#!/bin/sh
+
+#Copyright Alberto Bursi <alberto.bursi@outlook.it>
+#This script is released under GPLv3 license.
+
+#see description in printf text below
+
+#possible actions are "sync", "verify", "scrub" (which is a verify+repair), "cleanup" (deletes all parity files recursively).
+action="$1"
+
+# this script expects a path you want to work in, for example "/home", but will work fine with a single file too.
+chosen_folder="$2"
+
+files_that_failed=""
+
+#checking that all commands are available
+
+for i in grep find rm par2 printf ; do
+
+which $i > /dev/null
+	if [ "$?" != "0" ] ; then
+		echo Warning! $i not found, please install $i
+		exit 1
+	fi
+done
+
+generic_error_function(){
+	#if the above command exited with an error status the script terminates
+	if [ "$?" != "0" ] ; then
+		echo Warning! error detected, terminating batch processing
+		exit 1
+	fi
+}
+
+#if the action isn't within the list of accepted actions, print help message
+
+if  [ "$action" != "sync" ] &&  [ "$action" != "verify" ] && [ "$action" != "scrub" ] && [ "$action" != "cleanup" ] ; then
+
+		printf "
+Copyright Alberto Bursi <alberto.bursi@outlook.it>
+This script is released under GPLv3 license.
+
+this is a frontend for par2 command aka par2cmdline,
+a tool that checksums and creates parity to recover corruption in files.
+this frontend gives it an interface more suited for protecting data
+in storage drives, as the par2 command itself was designed for protecting files
+you upload to some sharing service, so it works like an archiver tool.
+
+Since this is the 21st century, this script will work with folder
+and file names with spaces too.
+
+SYNTAX
+par2drive action path
+
+ACTION:
+sync (updates parity files or creates parity files if not found)
+verify (checks integrity of files with given parity files)
+scrub (does a verify+repair)
+cleanup (deletes all parity files of a single file or recursively).
+
+PATH:
+this script expects a path you want to work in, for example /home, but will work fine with a single file too.
+If the path or file name contains spaces, please encase it with \", for example \"/my folder\" \n"
+
+exit 1
+
+fi
+
+#list all files recursively from the chosen folder, written as path to file, aka /home/username/blabla/file that we can use directly in our payload commands
+#the script filters out par2cmdline parity files as we don't want to make party of them too
+#this script will handle also file and folder names with spaces, because this is the 21st century
+
+find "$chosen_folder" -type f | grep -v ".par2" | while read -d $'\n' file
+do
+	echo working on "$file"
+	case $action in
+		sync)
+			#checking last modfication time of files, if the time of the parity is higher than the time of the file
+			#the file was not modified after the last time it was processed, and we skip it
+			date_last_modified_file=$(stat -c "%Y" "$file")
+			echo last modfied $date_last_modified_file
+			#if there is no parity file then we write 0 so the next if clause can work
+			if [ -f "$file".par2 ] ; then
+				date_last_modified_parity=$(stat -c "%Y" "$file".par2)
+			else
+				date_last_modified_parity=0
+			fi
+			echo parity last modified $date_last_modified_parity
+
+			if [ "$date_last_modified_parity" -lt "$date_last_modified_file" ] ; then
+				#deleting current parity files
+				rm -f "$file".vol*.par2
+				rm -f "$file".par2
+				#creating new parity files
+				par2 create "$file".par2 "$file"
+				generic_error_function
+			fi
+		;;
+
+		verify)
+			par2 verify "$file".par2
+
+			if [ "$?" != "0" ] ; then
+				files_that_failed="$files_that_failed $file"
+			fi
+		;;
+
+		scrub)
+			par2 verify "$file".par2
+			#if verification failed, we repair the file, otherwise we skip it
+			if [ "$?" != "0" ] ; then
+				par2 repair "$file".par2
+				#if repair fails for some reason, we add it to the list.
+				if [ "$?" != "0" ] ; then
+				files_that_failed="$files_that_failed $file"
+			fi
+			fi
+		;;
+
+		cleanup)
+		rm -f "$file".par2
+		rm -f "$file".vol*.par2
+		;;
+
+	esac
+
+	if ( [ "$action" = "verify" ] || [ "$action" = "scrub" ] ) && [ "$files_that_failed" != "" ] ; then
+		echo "####################"
+		echo "####################"
+		echo "####################"
+		echo "####################"
+		echo files that failed $action were:
+		printf "$files_that_failed \n"
+	fi
+
+
+done
