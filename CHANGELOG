@@ -1,0 +1,7 @@
+0.2 10 Sep 2018
+
+Fixed non-posix use of "read" command, tested with Asian filenames, added version number in script and added the changelog file
+Thanks to jnite gitnub user for reporting the issue.
+
+0.1 - 07 Aug 2018
+first release

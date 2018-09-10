@@ -5,6 +5,8 @@
 
 #see description in printf text below
 
+version="0.2"
+
 #possible actions are "sync", "verify", "scrub" (which is a verify+repair), "cleanup" (deletes all parity files recursively).
 action="$1"
 
@@ -40,6 +42,8 @@ if  [ "$action" != "sync" ] &&  [ "$action" != "verify" ] && [ "$action" != "scr
 Copyright Alberto Bursi <alberto.bursi@outlook.it>
 This script is released under GPLv3 license.
 
+VERSION $version
+
 this is a frontend for par2 command aka par2cmdline,
 a tool that checksums and creates parity to recover corruption in files.
 this frontend gives it an interface more suited for protecting data
@@ -67,10 +71,14 @@ exit 1
 fi
 
 #list all files recursively from the chosen folder, written as path to file, aka /home/username/blabla/file that we can use directly in our payload commands
-#the script filters out par2cmdline parity files as we don't want to make party of them too
+#the script filters out par2cmdline parity files as we don't want to make parity of them too
 #this script will handle also file and folder names with spaces, because this is the 21st century
 
-find "$chosen_folder" -type f | grep -v ".par2" | while read -d $'\n' file
+find "$chosen_folder" -type f | grep -v ".par2" | while read file
+
+#the following command is better if you have file names with weird non-printable characters in them
+#find "$chosen_folder" -type f | grep -v ".par2" | while read -d $'\n' file
+
 do
 	echo working on "$file"
 	case $action in

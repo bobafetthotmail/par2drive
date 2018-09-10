@@ -42,7 +42,7 @@ Then execute it to see the help.
 
 **"$HOME"/par2drive**
 
-If your distro supports user-defined /bin in the home folder (afaik most do), move this script there 
+If your distro supports user-defined /bin in the home folder (afaik most do), move this script there
 so it can be called directly from commandline.
 
 **mkdir -p "$HOME"/bin**
@@ -52,3 +52,14 @@ so it can be called directly from commandline.
 Afterwards (if the distro supports this) you can just call it with
 
 **par2drive**
+
+
+### LIMITATIONS:
+
+Due to limitations in the POSIX shell I'm targeting with this script, it won't be able to deal with file or folder names containing
+non-printable characters, which afaik should not be a huge issue anyway because I don't see any good reason to use such in your file name.
+
+I did test it with random asian characters (ideograms), which are not ASCII but Unicode and it seems to still work fine.
+I assume that the support for Unicode depends from the system, on Linux or *BSD distros it should always work.
+On embedded devices (OpenWrt, DD-Wrt, a NAS or a modded router with Entware packages) it might require additional dependencies
+to work with Unicode file names, please report if it's the case so I can add them to the checks at the beginning of the script.
