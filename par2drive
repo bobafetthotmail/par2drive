@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #Copyright Alberto Bursi <alberto.bursi@outlook.it>
 #This script is released under GPLv3 license.
@@ -67,7 +67,7 @@ exit 1
 fi
 
 #list all files recursively from the chosen folder, written as path to file, aka /home/username/blabla/file that we can use directly in our payload commands
-#the script filters out par2cmdline parity files as we don't want to make party of them too
+#the script filters out par2cmdline parity files as we don't want to make parity of them too
 #this script will handle also file and folder names with spaces, because this is the 21st century
 
 find "$chosen_folder" -type f | grep -v ".par2" | while read -d $'\n' file
