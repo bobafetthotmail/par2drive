@@ -17,7 +17,7 @@ files_that_failed=""
 
 #checking that all commands are available
 
-for i in grep find rm par2 printf ; do
+for i in grep find rm par2 printf stat ; do
 
 which $i > /dev/null
 	if [ "$?" != "0" ] ; then
