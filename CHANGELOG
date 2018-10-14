@@ -1,3 +1,7 @@
+0.3 15 Oct 2018
+
+Added function to select a dedicated parity folder to store the parity files. Avoids cluttering the data folder.
+
 0.2 10 Sep 2018
 
 Fixed non-posix use of "read" command, tested with Asian filenames, added version number in script and added the changelog file
