@@ -5,10 +5,13 @@
 
 #see description in printf text below
 
-version="0.3"
+version="0.4"
 
-#generic options passed to par2 (for performance and stuff), this must be written in the script here.
-options=""
+#options passed to par2, this must be written in the script here.
+#each command type ahs its own argument line because not all commands accept the same options
+create_options="-r50"
+verify_options=""
+repair_options=""
 
 #possible actions are "sync", "verify", "scrub" (which is a verify+repair), "cleanup" (deletes all parity files recursively).
 action="$1"
@@ -19,11 +22,10 @@ chosen_folder="$2"
 #path where the script will drop the parity files, if not specified it will drop them in the same folder as the data files
 parity_folder="$3"
 
-
-
-#performance-related configuration useful if you add options above to increase CPU usage, these ensure you don't overload the system and lock out users
-#commands to give least possible priority as this should NOT interfere with normal operation
-#uncomment them to enable (make sure you actually have the required tool first)
+#performance-related configuration useful if you add options above to increase CPU (and I/O) usage, these ensure you don't overload the system
+#and freeze the user interface.
+#these commands will give this script and par2 processes the least possible priority as this should NOT interfere with normal system operation
+#uncomment them to enable (make sure you actually have renice and ionice installed in the right path, of course)
 #/usr/bin/renice -n 20 $$
 #/usr/bin/ionice -c2 -n7 -p$$
 
@@ -66,12 +68,19 @@ Since this is the 21st century, this script will work with folder
 and file names with spaces too.
 
 The script allows to specify par2 options (to increase default CPU utilization, 
-recovery block percentage and such). For the moment you need to open it with a text editor
-and add them inside the 
-option=\"\"
-entry you find near the top.
+recovery block percentage and such). 
+For the moment you need to open it with a text editor and add them inside a
+variable like
+
+create_options=\"\"
+verify_options=\"\"
+repair_options=\"\"
+
+you find near the top.
 For example, 
-option=\"-r10\" 
+
+create_options=\"-r10\" 
+
 will set par2 redundancy to 10 percent (default is 5)
 
 SYNTAX
@@ -125,6 +134,10 @@ do
         file_parity="$parity_folder""$( echo "$file" | sed 's/^\(\.\)*//' )"
     fi
     
+    #extracting the file folder so it can be passed as -B argument later
+    file_folder="$(find "$file" -printf '%h\n')"
+
+    
 	case $action in
 		sync)       
             #checking last modfication time of files, if the time of the parity is higher than the time of the file
@@ -143,14 +156,14 @@ do
 				#deleting current parity files
 				rm -f "$file_parity".vol*.par2
 				rm -f "$file_parity".par2
-				#creating new parity files				
-				par2 create $options -a"$file_parity".par2 -B"$chosen_folder" "$file"
+				#creating new parity files	
+				par2 create $create_options -a"$file_parity".par2 -B"$file_folder" "$file"
 				generic_error_function
 			fi
 		;;
 
 		verify)
-			par2 verify $options -B"$chosen_folder" "$file_parity".par2 "$file"
+			par2 verify $verify_options -B"$file_folder" "$file_parity".par2 "$file"
 			
 			if [ "$?" != "0" ] ; then
 				files_that_failed="$files_that_failed $file"
@@ -158,14 +171,18 @@ do
 		;;
 
 		scrub)
-			par2 verify $options -B"$chosen_folder" "$file_parity".par2 "$file"
+			par2 verify $verify_options -B"$file_folder" "$file_parity".par2 "$file"
 			#if verification failed, we repair the file, otherwise we skip it
 			if [ "$?" != "0" ] ; then
-				par2 repair $options -B"$chosen_folder" "$file_parity".par2 "$file"
+				par2 repair $repair_options -B"$file_folder" "$file_parity".par2 "$file"
 				#if repair fails for some reason, we add it to the list.
 				if [ "$?" != "0" ] ; then
 				files_that_failed="$files_that_failed $file"
-			fi
+				else
+				#if it went well, we delete the backup file
+				rm "$file".1
+                fi
+                
 			fi
 		;;
 

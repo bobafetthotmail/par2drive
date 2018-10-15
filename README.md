@@ -7,14 +7,28 @@ this is a frontend for par2 command aka par2cmdline,
 a tool that checksums and creates parity to recover corruption in files.
 this frontend gives it an interface more suited for protecting data
 in storage drives, as the par2 command itself was designed for protecting files
-you upload to some sharing service, so it works like an archiver tool.
+you upload to some sharing service, it works like an archiver tool.
 
 Since this is the 21st century, this script will work with folder
-and file names with spaces too.
+and file names with spaces too, as long as you pass the paths with "" or escaping spaces.
 
-The script allows to specify par2 options (to increase default CPU utilization, recovery block percentage and such).
-For the moment you need to open it with a text editor and add them inside the **option=""** entry you find near the top.
-For example, **option="-r10"** will set par2 level of redundancy to 10% (default is 5%).
+The script allows to specify par2 options (to increase default CPU utilization, 
+recovery block percentage and such). 
+For the moment you need to open it with a text editor and add them inside a
+variable like
+
+**create_options=""
+
+verify_options=""
+
+repair_options=""**
+
+you find near the top.
+For example, 
+
+**create_options=\-r10\**
+
+will set par2 redundancy to 10 percent (default is 5)
 
 ## SYNTAX
 **par2drive action path [parity path]**

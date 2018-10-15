@@ -1,3 +1,8 @@
+0.4 16 Oct 2018
+
+fixed issue about not working with single files, created a option variable for each command as each command will accept only some options
+and will error out if it finds options it does not need.
+
 0.3 15 Oct 2018
 
 Added function to select a dedicated parity folder to store the parity files. Avoids cluttering the data folder.
