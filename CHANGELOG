@@ -1,3 +1,9 @@
+0.5 17 Oct 2018
+
+fixed issue about not working with single files in the same folder as the terminal, modified the way to add custom par2 options
+reworked a bit some output messages in the sync.
+Thanks to jnite github user for reporting the issue and suggesting the way to add custom par2 options.
+
 0.4 16 Oct 2018
 
 fixed issue about not working with single files, created a option variable for each command as each command will accept only some options
